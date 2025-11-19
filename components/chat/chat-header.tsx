@@ -42,7 +42,7 @@ export function ChatHeader({ title, onRename, onDelete, onShare }: ChatHeaderPro
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-gray-600 dark:text-gray-400 flex-shrink-0"
+              className="h-8 w-8 p-0 text-gray-600 dark:text-gray-400 shrink-0"
             >
               <MoreHorizontal className="h-4 w-4" />
             </Button>

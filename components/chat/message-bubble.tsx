@@ -1,9 +1,8 @@
 import { cn } from "@/lib/utils"
-import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { FileText, RefreshCw, Pencil, Copy } from "lucide-react"
-import { useState, useRef, useEffect } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 
 export type Message = {
@@ -45,6 +44,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       toast.success('Copied to clipboard')
     } catch (error) {
       toast.error('Failed to copy')
+      console.log(error)
     }
   }
 

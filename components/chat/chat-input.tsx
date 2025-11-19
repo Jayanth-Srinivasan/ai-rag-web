@@ -29,6 +29,7 @@ export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) 
       await onSendMessage(messageToSend)
     } catch (error) {
       toast.error("Failed to send message")
+      console.log(error)
       setMessage(messageToSend) 
     }
   }
@@ -60,7 +61,7 @@ export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) 
           size="icon"
           variant="ghost"
           onClick={handleAttachment}
-          className="flex-shrink-0 h-10 w-10 text-gray-600 dark:text-gray-400"
+          className="shrink-0 h-10 w-10 text-gray-600 dark:text-gray-400"
           disabled={isLoading}
         >
           <Paperclip className="h-5 w-5" />

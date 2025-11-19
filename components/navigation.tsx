@@ -5,7 +5,7 @@ import { ThemeToggle } from "./theme-toggle"
 
 export function Navigation() {
   return (
-    <nav className="fixed top-0 w-full z-50 border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-black/95 backdrop-blur supports-[backdrop-filter]:bg-white/90 dark:supports-[backdrop-filter]:bg-black/90">
+    <nav className="fixed top-0 w-full z-50 border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-black/95 backdrop-blur supports-backdrop-filter:bg-white/90 dark:supports-backdrop-filter:bg-black/90">
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-semibold text-lg">
           <div className="h-8 w-8 rounded-lg bg-black dark:bg-white flex items-center justify-center">

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { MessageBubble, type Message } from "@/components/chat/message-bubble"
 import { ChatInput } from "@/components/chat/chat-input"
 import { ChatHeader } from "@/components/chat/chat-header"
@@ -25,14 +25,22 @@ export default function ChatPage() {
   const [shareCode, setShareCode] = useState<string>("")
   const [shareDialogOpen, setShareDialogOpen] = useState(false)
 
+
+  const nextIdRef = useRef(0);
+
+const getNextId = () => {
+  nextIdRef.current += 1;
+  return nextIdRef.current.toString();
+};
+
   const handleSendMessage = async (content: string) => {
     // Add user message
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: getNextId(),
       role: "user",
       content,
       timestamp: new Date(),
-    }
+    };
 
     setMessages((prev) => {
       const newMessages = [...prev, userMessage]

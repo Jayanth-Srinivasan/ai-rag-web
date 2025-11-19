@@ -1,6 +1,7 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+// import { redirect } from "next/navigation"
+// import { createClient } from "@/lib/supabase/server"
 import { ChatSidebar } from "@/components/chat/chat-sidebar"
+import { User } from "@supabase/supabase-js";
 
 export default async function ChatLayout({
   children,
@@ -13,10 +14,14 @@ export default async function ChatLayout({
   // if (!user) {
   //   redirect("/auth")
   // }
-  const user = {
-    id: "test-user-id",
-    email: "demo@example.com",
-  } as any
+ const user: User = {
+   id: "test-user-id",
+   email: "demo@example.com",
+   app_metadata: {},
+   user_metadata: {},
+   aud: "authenticated",
+   created_at: new Date().toISOString(),
+ };
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">

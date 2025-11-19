@@ -72,7 +72,7 @@ export default function KnowledgeBasePage() {
                 className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <FileText className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                  <FileText className="h-5 w-5 text-gray-400 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-black dark:text-white truncate">
                       {doc.name}

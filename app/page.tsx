@@ -43,7 +43,7 @@ export default function Home() {
             <div className="absolute -top-4 left-0 w-72 opacity-60 animate-float">
               <Card className="p-4 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
                 <div className="flex items-start gap-3">
-                  <div className="h-8 w-8 rounded-full bg-black dark:bg-white flex items-center justify-center flex-shrink-0">
+                  <div className="h-8 w-8 rounded-full bg-black dark:bg-white flex items-center justify-center shrink-0">
                     <MessageSquare className="h-4 w-4 text-white dark:text-black" />
                   </div>
                   <div className="text-sm text-left">
@@ -57,7 +57,7 @@ export default function Home() {
             <div className="absolute -bottom-4 right-0 w-72 opacity-60 animate-float-delayed">
               <Card className="p-4 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
                 <div className="flex items-start gap-3">
-                  <div className="h-8 w-8 rounded-full bg-gray-800 dark:bg-gray-200 flex items-center justify-center flex-shrink-0">
+                  <div className="h-8 w-8 rounded-full bg-gray-800 dark:bg-gray-200 flex items-center justify-center shrink-0">
                     <Brain className="h-4 w-4 text-white dark:text-black" />
                   </div>
                   <div className="text-sm text-left">

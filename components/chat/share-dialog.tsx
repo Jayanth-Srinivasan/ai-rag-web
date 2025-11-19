@@ -21,9 +21,6 @@ interface ShareDialogProps {
 
 export function ShareDialog({ open, onOpenChange, shareCode }: ShareDialogProps) {
   const [copiedCode, setCopiedCode] = useState(false)
-  const [copiedLink, setCopiedLink] = useState(false)
-
-  const shareLink = `${window.location.origin}/chat/join?code=${shareCode}`
 
   const handleCopyCode = async () => {
     try {
@@ -32,20 +29,11 @@ export function ShareDialog({ open, onOpenChange, shareCode }: ShareDialogProps)
       toast.success("Code copied to clipboard")
       setTimeout(() => setCopiedCode(false), 2000)
     } catch (error) {
+      console.log(error)
       toast.error("Failed to copy code")
     }
   }
 
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(shareLink)
-      setCopiedLink(true)
-      toast.success("Link copied to clipboard")
-      setTimeout(() => setCopiedLink(false), 2000)
-    } catch (error) {
-      toast.error("Failed to copy link")
-    }
-  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -72,7 +60,7 @@ export function ShareDialog({ open, onOpenChange, shareCode }: ShareDialogProps)
                 size="icon"
                 variant="outline"
                 onClick={handleCopyCode}
-                className="flex-shrink-0"
+                className="shrink-0"
               >
                 {copiedCode ? (
                   <Check className="h-4 w-4 text-green-600" />
