@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { FileText, RefreshCw, Pencil, Copy } from "lucide-react"
+import { FileText, RefreshCw, Pencil, Copy, Paperclip } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -12,6 +12,12 @@ export type Message = {
   sources?: Array<{
     title: string
     page?: number
+  }>
+  attached_documents?: Array<{
+    id: string
+    file_name: string
+    file_type: string
+    file_size: number
   }>
   timestamp: Date
 }
@@ -30,12 +36,12 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 
   const handleRetry = () => {
     // TODO: Implement retry logic
-    console.log('Retry message:', message.id)
+    toast.info('Retry feature coming soon!')
   }
 
   const handleEdit = () => {
     // TODO: Implement edit logic
-    console.log('Edit message:', message.id)
+    toast.info('Edit feature coming soon!')
   }
 
   const handleCopy = async () => {
@@ -44,7 +50,6 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       toast.success('Copied to clipboard')
     } catch (error) {
       toast.error('Failed to copy')
-      console.log(error)
     }
   }
 
@@ -97,6 +102,21 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         >
           <p className="leading-relaxed whitespace-pre-wrap">{message.content}</p>
         </div>
+
+        {isUser && message.attached_documents && message.attached_documents.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {message.attached_documents.map((doc) => (
+              <Badge
+                key={doc.id}
+                variant="outline"
+                className="text-xs flex items-center gap-1 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300"
+              >
+                <Paperclip className="h-3 w-3" />
+                <span className="max-w-[150px] truncate">{doc.file_name}</span>
+              </Badge>
+            ))}
+          </div>
+        )}
 
         {!isUser && message.sources && message.sources.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1">

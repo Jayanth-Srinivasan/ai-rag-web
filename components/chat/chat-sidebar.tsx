@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { User } from "@supabase/supabase-js";
+import { Profile, ChatSession } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -22,46 +23,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { createClient } from "@/lib/supabase/client";
+import { signOut } from "@/app/auth/actions";
 import { toast } from "sonner";
 import { JoinDialog } from "./join-dialog";
 
-type Conversation = {
-  id: string;
-  title: string;
-  updatedAt: Date;
+type SessionWithDate = ChatSession & {
+  updatedAtDate: Date;
 };
 
-// Mock data for conversations
-const conversations: Conversation[] = [
-  {
-    id: "1",
-    title: "Machine Learning Basics",
-    updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-  },
-  {
-    id: "2",
-    title: "Python Best Practices",
-    updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-  },
-  {
-    id: "3",
-    title: "Database Design Patterns",
-    updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: "4",
-    title: "React Hooks Deep Dive",
-    updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: "5",
-    title: "API Design Principles",
-    updatedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
-  },
-];
-
-function groupConversationsByDate(items: Conversation[]) {
+function groupConversationsByDate(sessions: ChatSession[]) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
@@ -69,7 +39,7 @@ function groupConversationsByDate(items: Conversation[]) {
 
   const groups: Record<
     "Today" | "Yesterday" | "Previous 7 Days" | "Older",
-    Conversation[]
+    SessionWithDate[]
   > = {
     Today: [],
     Yesterday: [],
@@ -77,36 +47,52 @@ function groupConversationsByDate(items: Conversation[]) {
     Older: [],
   };
 
-  items.forEach((conv: Conversation) => {
-    if (conv.updatedAt >= today) {
-      groups.Today.push(conv);
-    } else if (conv.updatedAt >= yesterday) {
-      groups.Yesterday.push(conv);
-    } else if (conv.updatedAt >= sevenDaysAgo) {
-      groups["Previous 7 Days"].push(conv);
+  sessions.forEach((session) => {
+    const sessionWithDate: SessionWithDate = {
+      ...session,
+      updatedAtDate: new Date(session.updated_at),
+    };
+
+    if (sessionWithDate.updatedAtDate >= today) {
+      groups.Today.push(sessionWithDate);
+    } else if (sessionWithDate.updatedAtDate >= yesterday) {
+      groups.Yesterday.push(sessionWithDate);
+    } else if (sessionWithDate.updatedAtDate >= sevenDaysAgo) {
+      groups["Previous 7 Days"].push(sessionWithDate);
     } else {
-      groups.Older.push(conv);
+      groups.Older.push(sessionWithDate);
     }
   });
 
   return groups;
 }
 
-export function ChatSidebar({ user }: { user: User }) {
+interface ChatSidebarProps {
+  user: User
+  profile: Profile | null
+  sessions: ChatSession[]
+}
+
+export function ChatSidebar({ user, profile, sessions }: ChatSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const supabase = createClient();
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
-  const groupedConversations = groupConversationsByDate(conversations);
+  const groupedConversations = groupConversationsByDate(sessions);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    toast.success("Signed out successfully");
-    router.push("/");
-    router.refresh();
+    try {
+      await signOut();
+    } catch (error) {
+      toast.error("Failed to sign out");
+    }
   };
 
-  const initials = user.email?.substring(0, 2).toUpperCase() || "U";
+  // Generate initials from name or email
+  const initials = profile?.name
+    ? profile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : user.email?.substring(0, 2).toUpperCase() || "U";
+
+  const displayName = profile?.name || user.email || "User";
 
   return (
     <>
@@ -168,7 +154,7 @@ export function ChatSidebar({ user }: { user: User }) {
                     {group}
                   </h3>
                   <div className="space-y-1">
-                    {convs.map((conversation: Conversation) => (
+                    {convs.map((conversation: SessionWithDate) => (
                       <Link
                         key={conversation.id}
                         href={`/chat/${conversation.id}`}
@@ -203,9 +189,16 @@ export function ChatSidebar({ user }: { user: User }) {
                 <div className="h-6 w-6 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
                   <span className="text-xs font-medium">{initials}</span>
                 </div>
-                <span className="text-sm truncate flex-1 text-left">
-                  {user.email}
-                </span>
+                <div className="flex flex-col flex-1 text-left min-w-0">
+                  <span className="text-sm truncate font-medium">
+                    {displayName}
+                  </span>
+                  {profile?.name && (
+                    <span className="text-xs text-gray-500 truncate">
+                      {user.email}
+                    </span>
+                  )}
+                </div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">

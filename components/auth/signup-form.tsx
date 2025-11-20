@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -16,10 +15,13 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
+import { signUp } from "@/app/auth/actions"
 
 const formSchema = z.object({
+  name: z.string().min(2, {
+    message: "Name must be at least 2 characters.",
+  }),
   email: z.string().email({
     message: "Please enter a valid email address.",
   }),
@@ -34,12 +36,11 @@ const formSchema = z.object({
 
 export function SignUpForm() {
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
-  const supabase = createClient()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -50,30 +51,38 @@ export function SignUpForm() {
     setIsLoading(true)
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const result = await signUp({
+        name: values.name,
         email: values.email,
         password: values.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
       })
 
-      if (error) {
-        toast.error(error.message)
+      if (result.error) {
+        // Provide helpful error messages based on error type
+        const errorMessage = result.error.toLowerCase();
+
+        if (errorMessage.includes('already exists') || errorMessage.includes('already registered')) {
+          toast.error("An account with this email already exists. Try signing in instead.");
+        } else if (errorMessage.includes('password')) {
+          toast.error("Password must be at least 6 characters long.");
+        } else if (errorMessage.includes('invalid email')) {
+          toast.error("Please enter a valid email address.");
+        } else if (errorMessage.includes('rate limit')) {
+          toast.error("Too many signup attempts. Please wait a moment and try again.");
+        } else {
+          toast.error(result.error);
+        }
         return
       }
 
-      if (data.user) {
-        if (data.user.identities && data.user.identities.length === 0) {
-          toast.error("An account with this email already exists.")
-          return
-        }
-
-        toast.success("Account created! Please check your email to verify your account.")
+      if (result.success) {
+        toast.success(result.message || "Account created! Please check your email to verify your account.", {
+          duration: 5000,
+        })
         form.reset()
       }
     } catch (error) {
-      toast.error("An error occurred. Please try again.")
+      toast.error("An error occurred during signup. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -82,6 +91,24 @@ export function SignUpForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input
+                  type="text"
+                  placeholder="John Doe"
+                  disabled={isLoading}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="email"

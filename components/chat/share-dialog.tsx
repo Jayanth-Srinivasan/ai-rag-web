@@ -29,7 +29,6 @@ export function ShareDialog({ open, onOpenChange, shareCode }: ShareDialogProps)
       toast.success("Code copied to clipboard")
       setTimeout(() => setCopiedCode(false), 2000)
     } catch (error) {
-      console.log(error)
       toast.error("Failed to copy code")
     }
   }

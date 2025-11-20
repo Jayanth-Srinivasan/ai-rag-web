@@ -64,7 +64,6 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
         // Simulate upload
         await new Promise((resolve) => setTimeout(resolve, 2000))
       }
-      toast.success(`${selectedFiles.length} file(s) uploaded successfully`)
       setSelectedFiles([])
     } catch (error) {
       toast.error("Failed to upload files")

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -16,8 +15,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { signIn } from "@/app/auth/actions";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -30,8 +29,6 @@ const formSchema = z.object({
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-  const supabase = createClient();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -45,25 +42,40 @@ export function LoginForm() {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const result = await signIn({
         email: values.email,
         password: values.password,
       });
 
-      if (error) {
-        toast.error(error.message);
+      // If there's an error, result will be returned
+      if (result?.error) {
+        // Provide helpful error messages based on error type
+        const errorMessage = result.error.toLowerCase();
+
+        if (errorMessage.includes('invalid login credentials') || errorMessage.includes('invalid')) {
+          toast.error("Invalid email or password. Please try again.");
+        } else if (errorMessage.includes('email not confirmed')) {
+          toast.error("Please confirm your email address before signing in. Check your inbox!");
+        } else if (errorMessage.includes('too many requests')) {
+          toast.error("Too many login attempts. Please wait a moment and try again.");
+        } else {
+          toast.error(result.error);
+        }
+
+        setIsLoading(false);
         return;
       }
 
-      if (data.user) {
-        toast.success("Signed in successfully!");
-        router.push("/chat");
-        router.refresh();
-      }
+      // If we reach here without redirect, something went wrong
+      // But normally redirect() will throw and prevent this
     } catch (error) {
+      // Check if this is a Next.js redirect (which is expected)
+      if (error && typeof error === 'object' && 'digest' in error) {
+        // This is a Next.js redirect - let it propagate
+        throw error;
+      }
+      // Otherwise, it's a real error
       toast.error("An error occurred. Please try again.");
-      console.log(error)
-    } finally {
       setIsLoading(false);
     }
   }

@@ -10,7 +10,9 @@ export async function GET(request: Request) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      // Add from=auth parameter to trigger welcome toast
+      const redirectUrl = next.includes('?') ? `${next}&from=auth` : `${next}?from=auth`
+      return NextResponse.redirect(`${origin}${redirectUrl}`)
     }
   }
 
