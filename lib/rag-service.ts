@@ -1,31 +1,15 @@
 import { RAGRequest, RAGResponse, RAGError, UserKBUploadRequest, UserKBUploadResponse } from "@/types/rag"
-import { MessageSource } from "@/types/database"
+import { MessageSource, MessageReports, MessageAnalysis, MessageCharts } from "@/types/database"
 
 /**
- * Parse raw LangChain response format to extract clean content
- * Handles formats like: content='...' response_metadata={...} id='...'
+ * Mapped response from RAG service
  */
-function parseResponseContent(rawAnswer: string): string {
-  // Check for LangChain string representation (handles both single and double quotes)
-  if (rawAnswer.includes('response_metadata=')) {
-    // Try single quotes first (most common)
-    let match = rawAnswer.match(/^content='([\s\S]*?)'\s*response_metadata=/)
-    if (!match) {
-      // Try double quotes
-      match = rawAnswer.match(/^content="([\s\S]*?)"\s*response_metadata=/)
-    }
-
-    if (match && match[1]) {
-      // Unescape the string
-      return match[1]
-        .replace(/\\n/g, '\n')
-        .replace(/\\'/g, "'")
-        .replace(/\\"/g, '"')
-        .replace(/\\\\/g, '\\')
-    }
-  }
-  // Return as-is if it's already clean
-  return rawAnswer
+export interface RAGMappedResponse {
+  message: string
+  sources?: MessageSource[]
+  reports?: MessageReports | null
+  analysis?: MessageAnalysis | null
+  charts?: MessageCharts | null
 }
 
 /**
@@ -92,7 +76,7 @@ export async function callRAGEndpoint(
     file_contents?: string[]
     index_user?: boolean
   }
-): Promise<{ message: string; sources?: MessageSource[] }> {
+): Promise<RAGMappedResponse> {
   const baseUrl = process.env.RAG_API_BASE_URL || ''
   const ragUrl = `${baseUrl}/chat`
 
@@ -204,19 +188,17 @@ export async function callRAGEndpoint(
     const data: RAGResponse = await response.json()
 
     console.log("[RAG Service] Success! Response received")
-    console.log("[RAG Service] Answer length:", data.answer.length)
-    console.log("[RAG Service] Sources count:", data.sources?.length || 0)
-    if (data.index_status) {
-      console.log("[RAG Service] Index status:", data.index_status)
-    }
+    console.log("[RAG Service] Message length:", data.message.length)
+    console.log("[RAG Service] Has reports:", !!data.reports)
+    console.log("[RAG Service] Has analysis:", !!data.analysis)
+    console.log("[RAG Service] Has charts:", !!data.charts)
 
-    // Map response to frontend format, parsing out any metadata from the answer
-    const mappedResponse: { message: string; sources?: MessageSource[] } = {
-      message: parseResponseContent(data.answer),
-      sources: data.sources?.map((sourceText, index) => ({
-        title: `Source ${index + 1}`,
-        page: undefined,
-      })),
+    // Map response to frontend format
+    const mappedResponse: RAGMappedResponse = {
+      message: data.message,
+      reports: data.reports,
+      analysis: data.analysis,
+      charts: data.charts,
     }
 
     return mappedResponse

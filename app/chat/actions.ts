@@ -379,13 +379,26 @@ export async function generateAIResponse(
     // Call external RAG endpoint
     const ragResponse = await callRAGEndpoint(ragRequest)
 
-    // Store AI response in database
+    // Store AI response in database (basic message)
     const result = await createMessage(
       sessionId,
       'assistant',
       ragResponse.message,
       ragResponse.sources
     )
+
+    // Return with additional data for UI rendering
+    if (result.data) {
+      return {
+        ...result,
+        data: {
+          ...result.data,
+          reports: ragResponse.reports,
+          analysis: ragResponse.analysis,
+          charts: ragResponse.charts,
+        }
+      }
+    }
 
     return result
   } catch (error) {

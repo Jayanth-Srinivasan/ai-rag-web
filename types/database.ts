@@ -38,6 +38,38 @@ export interface AttachedDocument {
   file_path: string
 }
 
+// Report data for assistant messages
+export interface MessageReports {
+  report_md: string
+  csv_exports?: Record<string, string>
+}
+
+// Analysis data for assistant messages
+export interface MessageAnalysis {
+  aggregate?: {
+    total_cost: number
+    by_service: Array<{ service: string; cost: number }>
+  }
+  idle_resources?: Array<{
+    resource_id: string
+    inventory_state: string
+    cost: number
+  }>
+  rightsizing?: Array<{
+    resource_id: string
+    instance_type: string
+    avg_cpu: number
+    recommended_action: string
+    estimated_monthly_saving: number
+  }>
+  reserved_candidates?: Array<Record<string, unknown>>
+}
+
+// Charts data for assistant messages
+export interface MessageCharts {
+  [key: string]: string | undefined  // chart_name -> base64 PNG
+}
+
 // Client-side message type (matches UI, includes DB fields)
 export interface Message {
   id: string
@@ -45,6 +77,9 @@ export interface Message {
   content: string
   sources?: MessageSource[]
   attached_documents?: AttachedDocument[]
+  reports?: MessageReports | null
+  analysis?: MessageAnalysis | null
+  charts?: MessageCharts | null
   created_at: string
   session_id?: string
 }
