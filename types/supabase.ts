@@ -23,6 +23,9 @@ export type Database = {
           role: string
           session_id: string
           sources: Json | null
+          reports: Json | null
+          analysis: Json | null
+          charts: Json | null
         }
         Insert: {
           attached_document_ids?: string[] | null
@@ -32,6 +35,9 @@ export type Database = {
           role: string
           session_id: string
           sources?: Json | null
+          reports?: Json | null
+          analysis?: Json | null
+          charts?: Json | null
         }
         Update: {
           attached_document_ids?: string[] | null
@@ -41,6 +47,9 @@ export type Database = {
           role?: string
           session_id?: string
           sources?: Json | null
+          reports?: Json | null
+          analysis?: Json | null
+          charts?: Json | null
         }
         Relationships: [
           {
