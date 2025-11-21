@@ -2,12 +2,33 @@ import { RAGRequest, RAGResponse, RAGError, UserKBUploadRequest, UserKBUploadRes
 import { MessageSource } from "@/types/database"
 
 /**
+ * Parse raw LangChain response format to extract clean content
+ * Handles formats like: content="..." response_metadata={...} id='...'
+ */
+function parseResponseContent(rawAnswer: string): string {
+  // If it looks like a LangChain string representation
+  if (rawAnswer.includes('content="') && rawAnswer.includes('response_metadata=')) {
+    // Extract just the content portion
+    const contentMatch = rawAnswer.match(/content="([\s\S]*?)"\s*response_metadata=/)
+    if (contentMatch && contentMatch[1]) {
+      // Unescape the string
+      return contentMatch[1]
+        .replace(/\\n/g, '\n')
+        .replace(/\\"/g, '"')
+        .replace(/\\\\/g, '\\')
+    }
+  }
+  // Return as-is if it's already clean
+  return rawAnswer
+}
+
+/**
  * Calls the KB indexing endpoint to index documents in user's knowledge base
  */
 export async function callKBIndexEndpoint(
   params: { user_id: string; file_contents: string[] }
 ): Promise<UserKBUploadResponse> {
-  const baseUrl = process.env.RAG_API_URL?.replace('/ask', '') || ''
+  const baseUrl = process.env.RAG_API_BASE_URL || ''
   const kbUrl = `${baseUrl}/kb/user/upload`
 
   const requestBody: UserKBUploadRequest = {
@@ -66,7 +87,8 @@ export async function callRAGEndpoint(
     index_user?: boolean
   }
 ): Promise<{ message: string; sources?: MessageSource[] }> {
-  const ragUrl = process.env.RAG_API_URL
+  const baseUrl = process.env.RAG_API_BASE_URL || ''
+  const ragUrl = `${baseUrl}/chat`
 
   // Build request body matching backend API specification exactly
   const requestBody: RAGRequest = {
@@ -78,7 +100,7 @@ export async function callRAGEndpoint(
   }
 
   // DEVELOPMENT MODE: Console log payload if RAG endpoint is not configured
-  if (!ragUrl || ragUrl.includes('localhost') || ragUrl.includes('example')) {
+  if (!baseUrl || baseUrl.includes('localhost') || baseUrl.includes('example')) {
     console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     console.log("[RAG Service] 🔧 DEVELOPMENT MODE - Backend not configured")
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -182,9 +204,9 @@ export async function callRAGEndpoint(
       console.log("[RAG Service] Index status:", data.index_status)
     }
 
-    // Map response to frontend format
+    // Map response to frontend format, parsing out any metadata from the answer
     const mappedResponse: { message: string; sources?: MessageSource[] } = {
-      message: data.answer,
+      message: parseResponseContent(data.answer),
       sources: data.sources?.map((sourceText, index) => ({
         title: `Source ${index + 1}`,
         page: undefined,
