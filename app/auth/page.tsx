@@ -26,7 +26,7 @@ export default function AuthPage() {
               <MessageSquare className="h-6 w-6 text-white dark:text-black" />
             </div>
             <span className="text-2xl font-semibold text-black dark:text-white">
-              RAG Chat
+              CloudCost AI
             </span>
           </div>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

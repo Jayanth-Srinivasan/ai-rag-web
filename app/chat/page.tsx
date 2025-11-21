@@ -64,10 +64,10 @@ export default function ChatPage() {
   }
 
   const examplePrompts = [
-    "Summarize the main points from my documents",
-    "What are the key findings in the research?",
-    "Explain the methodology used",
-    "Compare the different approaches discussed",
+    "Identify underutilized resources and potential savings",
+    "Show me cost trends and anomalies from last month",
+    "Which instances should be rightsized or terminated?",
+    "Generate a cost optimization report with recommendations",
   ]
 
   return (
@@ -75,10 +75,10 @@ export default function ChatPage() {
       <div className="max-w-2xl w-full space-y-8">
         <div className="text-center space-y-3">
           <h2 className="text-3xl font-semibold text-black dark:text-white">
-            Start a conversation
+            Analyze Your Cloud Costs
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Ask questions about your documents and get intelligent answers
+            Get AI-powered recommendations to optimize cloud spending and reduce expenses
           </p>
         </div>
         <div className="space-y-3">
@@ -112,7 +112,7 @@ export default function ChatPage() {
               variant="outline"
               className="border-gray-300 dark:border-gray-700"
             >
-              Upload Documents
+              Upload Data
             </Button>
           </Link>
         </div>

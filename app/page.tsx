@@ -15,16 +15,16 @@ export default function Home() {
         <div className="mx-auto max-w-4xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-4 py-1.5 text-sm">
             <Sparkles className="h-4 w-4 text-black dark:text-white" />
-            <span className="font-medium text-black dark:text-white">Powered by Advanced RAG Technology</span>
+            <span className="font-medium text-black dark:text-white">Powered by Generative AI</span>
           </div>
 
           <h1 className="mb-6 text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl text-black dark:text-white">
-            Chat with Your Documents
+            Cloud Cost Optimization Advisor
           </h1>
 
           <p className="mb-10 text-xl text-gray-600 dark:text-gray-400 md:text-2xl max-w-2xl mx-auto">
-            Upload your documents, ask questions, and get intelligent answers powered by
-            Retrieval-Augmented Generation. Your personal AI knowledge assistant.
+            Upload billing data, resource usage reports, and configurations to get AI-powered
+            recommendations for optimizing cloud spending and governance.
           </p>
 
           <div className="flex items-center justify-center mb-16">
@@ -47,8 +47,8 @@ export default function Home() {
                     <MessageSquare className="h-4 w-4 text-white dark:text-black" />
                   </div>
                   <div className="text-sm text-left">
-                    <p className="font-medium text-black dark:text-white">How does photosynthesis work?</p>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs mt-1">Searching biology notes...</p>
+                    <p className="font-medium text-black dark:text-white">Which EC2 instances are underutilized?</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs mt-1">Analyzing usage patterns...</p>
                   </div>
                 </div>
               </Card>
@@ -61,8 +61,8 @@ export default function Home() {
                     <Brain className="h-4 w-4 text-white dark:text-black" />
                   </div>
                   <div className="text-sm text-left">
-                    <p className="font-medium text-black dark:text-white">Found in: Chapter 3.pdf</p>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs mt-1">Photosynthesis is the process...</p>
+                    <p className="font-medium text-black dark:text-white">Potential Savings: $2,450/month</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs mt-1">Rightsize 12 instances to save...</p>
                   </div>
                 </div>
               </Card>
