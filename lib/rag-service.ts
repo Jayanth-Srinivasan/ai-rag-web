@@ -3,28 +3,25 @@ import { MessageSource } from "@/types/database"
 
 /**
  * Parse raw LangChain response format to extract clean content
- * Handles formats like: content="..." response_metadata={...} id='...'
+ * Handles formats like: content='...' response_metadata={...} id='...'
  */
 function parseResponseContent(rawAnswer: string): string {
-  // If it looks like a LangChain string representation
-  if (rawAnswer.includes('content="') && rawAnswer.includes('response_metadata=')) {
-    // Find the start of content
-    const contentStart = rawAnswer.indexOf('content="')
-    if (contentStart !== -1) {
-      const valueStart = contentStart + 'content="'.length
-      // Find the closing quote before response_metadata
-      const metadataIndex = rawAnswer.indexOf('response_metadata=')
-      if (metadataIndex > valueStart) {
-        // Find the last quote before response_metadata
-        const contentPart = rawAnswer.substring(valueStart, metadataIndex)
-        // Remove trailing quote and whitespace
-        const content = contentPart.replace(/"\s*$/, '')
-        // Unescape the string
-        return content
-          .replace(/\\n/g, '\n')
-          .replace(/\\"/g, '"')
-          .replace(/\\\\/g, '\\')
-      }
+  // Check for LangChain string representation (handles both single and double quotes)
+  if (rawAnswer.includes('response_metadata=')) {
+    // Try single quotes first (most common)
+    let match = rawAnswer.match(/^content='([\s\S]*?)'\s*response_metadata=/)
+    if (!match) {
+      // Try double quotes
+      match = rawAnswer.match(/^content="([\s\S]*?)"\s*response_metadata=/)
+    }
+
+    if (match && match[1]) {
+      // Unescape the string
+      return match[1]
+        .replace(/\\n/g, '\n')
+        .replace(/\\'/g, "'")
+        .replace(/\\"/g, '"')
+        .replace(/\\\\/g, '\\')
     }
   }
   // Return as-is if it's already clean
