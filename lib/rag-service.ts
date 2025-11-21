@@ -8,14 +8,23 @@ import { MessageSource } from "@/types/database"
 function parseResponseContent(rawAnswer: string): string {
   // If it looks like a LangChain string representation
   if (rawAnswer.includes('content="') && rawAnswer.includes('response_metadata=')) {
-    // Extract just the content portion
-    const contentMatch = rawAnswer.match(/content="([\s\S]*?)"\s*response_metadata=/)
-    if (contentMatch && contentMatch[1]) {
-      // Unescape the string
-      return contentMatch[1]
-        .replace(/\\n/g, '\n')
-        .replace(/\\"/g, '"')
-        .replace(/\\\\/g, '\\')
+    // Find the start of content
+    const contentStart = rawAnswer.indexOf('content="')
+    if (contentStart !== -1) {
+      const valueStart = contentStart + 'content="'.length
+      // Find the closing quote before response_metadata
+      const metadataIndex = rawAnswer.indexOf('response_metadata=')
+      if (metadataIndex > valueStart) {
+        // Find the last quote before response_metadata
+        const contentPart = rawAnswer.substring(valueStart, metadataIndex)
+        // Remove trailing quote and whitespace
+        const content = contentPart.replace(/"\s*$/, '')
+        // Unescape the string
+        return content
+          .replace(/\\n/g, '\n')
+          .replace(/\\"/g, '"')
+          .replace(/\\\\/g, '\\')
+      }
     }
   }
   // Return as-is if it's already clean
