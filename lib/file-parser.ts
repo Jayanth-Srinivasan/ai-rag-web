@@ -31,7 +31,7 @@ export async function extractTextFromPDF(file: File): Promise<string> {
 
       // Extract text with better spacing and structure
       const pageText = textContent.items
-        .map((item: any) => {
+        .map((item: { str?: string }) => {
           // Preserve text structure with proper spacing
           if ('str' in item) {
             return item.str

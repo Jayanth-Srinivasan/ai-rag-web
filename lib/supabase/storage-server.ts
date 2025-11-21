@@ -135,7 +135,7 @@ export async function listFiles(
   bucket: string,
   path: string = ''
 ): Promise<{
-  data: Array<{ name: string; id: string; metadata: any }> | null
+  data: Array<{ name: string; id: string; metadata: Record<string, unknown> }> | null
   error: string | null
 }> {
   try {

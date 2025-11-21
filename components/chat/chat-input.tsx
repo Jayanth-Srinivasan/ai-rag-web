@@ -3,7 +3,7 @@
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Send, Paperclip, Loader2, X, FileText } from "lucide-react"
+import { Send, Paperclip, Loader2, X } from "lucide-react"
 import { toast } from "sonner"
 import { parseFiles } from "@/lib/file-parser"
 import { validateFiles, formatFileSize, getFileIcon } from "@/lib/file-utils"
@@ -17,7 +17,7 @@ interface ChatInputProps {
   onFirstFileUpload?: (files: File[], extractedTexts: string[]) => void
 }
 
-export function ChatInput({ sessionId, onSendMessage, isLoading = false, syncToKB, onFirstFileUpload }: ChatInputProps) {
+export function ChatInput({ sessionId, onSendMessage, isLoading = false, syncToKB: _syncToKB, onFirstFileUpload }: ChatInputProps) {
   const [hasUploadedFiles, setHasUploadedFiles] = useState(false)
   const [message, setMessage] = useState("")
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
@@ -68,7 +68,7 @@ export function ChatInput({ sessionId, onSendMessage, isLoading = false, syncToK
           // Collect successful document IDs
           documentIds = uploadResults
             .filter((result) => result.status === 'fulfilled' && result.value.data)
-            .map((result) => (result as PromiseFulfilledResult<any>).value.data.id)
+            .map((result) => (result as PromiseFulfilledResult<{ data: { id: string } }>).value.data.id)
 
           // Check for upload failures
           const failedCount = uploadResults.length - documentIds.length
