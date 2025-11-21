@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { FileText, RefreshCw, Pencil, Copy, Paperclip } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+import { FileText, RefreshCw, Pencil, Copy, Check, X } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -24,24 +25,42 @@ export type Message = {
 
 interface MessageBubbleProps {
   message: Message
+  onRetry?: (messageId: string) => void
+  onEdit?: (messageId: string, newContent: string) => void
+  isLoading?: boolean
 }
 
-export function MessageBubble({ message }: MessageBubbleProps) {
+export function MessageBubble({ message, onRetry, onEdit, isLoading }: MessageBubbleProps) {
   const isUser = message.role === "user"
   const [showTimestamp, setShowTimestamp] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editContent, setEditContent] = useState(message.content)
 
   const handleDoubleClick = () => {
     setShowTimestamp(!showTimestamp)
   }
 
   const handleRetry = () => {
-    // TODO: Implement retry logic
-    toast.info('Retry feature coming soon!')
+    if (onRetry) {
+      onRetry(message.id)
+    }
   }
 
-  const handleEdit = () => {
-    // TODO: Implement edit logic
-    toast.info('Edit feature coming soon!')
+  const handleStartEdit = () => {
+    setEditContent(message.content)
+    setIsEditing(true)
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+    setEditContent(message.content)
+  }
+
+  const handleSubmitEdit = () => {
+    if (onEdit && editContent.trim() && editContent !== message.content) {
+      onEdit(message.id, editContent.trim())
+    }
+    setIsEditing(false)
   }
 
   const handleCopy = async () => {
@@ -56,65 +75,89 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   return (
     <div className={cn("mb-2 group", isUser && "flex justify-end")}>
       <div className={cn("relative", isUser ? "max-w-[85%]" : "max-w-[85%]")}>
-        <div className={cn(
-          "absolute -top-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150",
-          isUser ? "-left-8" : "-right-14"
-        )}>
-          {isUser ? (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 w-6 p-0 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-700"
-              onClick={handleEdit}
-            >
-              <Pencil className="h-3 w-3 text-gray-600 dark:text-gray-400" />
-            </Button>
-          ) : (
-            <div className="flex gap-1">
+        {!isEditing && (
+          <div className={cn(
+            "absolute -top-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150",
+            isUser ? "-left-8" : "-right-14"
+          )}>
+            {isUser ? (
               <Button
                 size="sm"
                 variant="ghost"
                 className="h-6 w-6 p-0 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-700"
-                onClick={handleCopy}
+                onClick={handleStartEdit}
+                disabled={isLoading}
               >
-                <Copy className="h-3 w-3 text-gray-600 dark:text-gray-400" />
+                <Pencil className="h-3 w-3 text-gray-600 dark:text-gray-400" />
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-6 w-6 p-0 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-700"
-                onClick={handleRetry}
-              >
-                <RefreshCw className="h-3 w-3 text-gray-600 dark:text-gray-400" />
-              </Button>
-            </div>
-          )}
-        </div>
-
-        <div
-          className={cn(
-            "px-3 py-2 rounded-lg text-sm cursor-pointer select-none",
-            isUser
-              ? "bg-black dark:bg-white text-white dark:text-black"
-              : "bg-gray-100 dark:bg-gray-900 text-black dark:text-white"
-          )}
-          onDoubleClick={handleDoubleClick}
-        >
-          <p className="leading-relaxed whitespace-pre-wrap">{message.content}</p>
-        </div>
+            ) : (
+              <div className="flex gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                  onClick={handleCopy}
+                >
+                  <Copy className="h-3 w-3 text-gray-600 dark:text-gray-400" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                  onClick={handleRetry}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className="h-3 w-3 text-gray-600 dark:text-gray-400" />
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
 
         {isUser && message.attached_documents && message.attached_documents.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1">
+          <div className="flex flex-wrap gap-1.5 mb-2">
             {message.attached_documents.map((doc) => (
-              <Badge
+              <div
                 key={doc.id}
-                variant="outline"
-                className="text-xs flex items-center gap-1 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300"
+                className="flex items-center gap-2 px-2.5 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700"
               >
-                <Paperclip className="h-3 w-3" />
-                <span className="max-w-[150px] truncate">{doc.file_name}</span>
-              </Badge>
+                <FileText className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 max-w-[120px] truncate">
+                  {doc.file_name}
+                </span>
+              </div>
             ))}
+          </div>
+        )}
+
+        {isEditing ? (
+          <div className="space-y-2">
+            <Textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="min-h-[60px] text-sm bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700"
+              autoFocus
+            />
+            <div className="flex justify-end gap-2">
+              <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
+                <X className="h-4 w-4 mr-1" /> Cancel
+              </Button>
+              <Button size="sm" onClick={handleSubmitEdit} disabled={!editContent.trim()}>
+                <Check className="h-4 w-4 mr-1" /> Save & Send
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div
+            className={cn(
+              "px-3 py-2 rounded-lg text-sm cursor-pointer select-none",
+              isUser
+                ? "bg-black dark:bg-white text-white dark:text-black"
+                : "bg-gray-100 dark:bg-gray-900 text-black dark:text-white"
+            )}
+            onDoubleClick={handleDoubleClick}
+          >
+            <p className="leading-relaxed whitespace-pre-wrap">{message.content}</p>
           </div>
         )}
 

@@ -14,25 +14,90 @@ if (typeof window !== 'undefined') {
  */
 export async function extractTextFromPDF(file: File): Promise<string> {
   try {
+    console.log('[PDF Parser] Starting PDF extraction for:', file.name)
     const arrayBuffer = await file.arrayBuffer()
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
 
+    console.log(`[PDF Parser] PDF loaded: ${pdf.numPages} pages`)
+
     let fullText = ''
+    let totalCharacters = 0
+    let emptyPages = 0
 
     // Extract text from each page
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i)
       const textContent = await page.getTextContent()
-      const pageText = textContent.items
-        .map((item: any) => item.str)
-        .join(' ')
 
-      fullText += `\n--- Page ${i} ---\n${pageText}\n`
+      // Extract text with better spacing and structure
+      const pageText = textContent.items
+        .map((item: any) => {
+          // Preserve text structure with proper spacing
+          if ('str' in item) {
+            return item.str
+          }
+          return ''
+        })
+        .filter((text: string) => text.trim().length > 0)
+        .join(' ')
+        .replace(/\s+/g, ' ') // Normalize multiple spaces
+        .trim()
+
+      // Debug logging
+      const pageLength = pageText.length
+      totalCharacters += pageLength
+
+      console.log(`[PDF Parser] Page ${i}: ${pageLength} characters`)
+
+      if (pageLength === 0) {
+        emptyPages++
+        console.warn(`[PDF Parser] ⚠️ Page ${i} is EMPTY - might be image-based/scanned`)
+      } else {
+        console.log(`[PDF Parser] Page ${i} first 200 chars:`, pageText.substring(0, 200))
+      }
+
+      // Add page marker and content
+      if (pageText.length > 0) {
+        fullText += `\n--- Page ${i} ---\n${pageText}\n`
+      } else {
+        fullText += `\n--- Page ${i} ---\n[Empty page - possibly scanned image]\n`
+      }
     }
 
-    return fullText.trim()
+    console.log('[PDF Parser] ✅ Extraction complete:')
+    console.log(`  - Total pages: ${pdf.numPages}`)
+    console.log(`  - Empty pages: ${emptyPages}`)
+    console.log(`  - Total characters: ${totalCharacters}`)
+    console.log(`  - Output length: ${fullText.length}`)
+
+    // Warning if PDF appears to be image-based
+    if (emptyPages === pdf.numPages) {
+      console.error('[PDF Parser] ❌ All pages are empty!')
+      console.error('[PDF Parser] This PDF is likely image-based/scanned and requires OCR')
+      throw new Error(
+        'This PDF appears to be image-based (scanned). Text extraction requires OCR. ' +
+        'Please use a text-based PDF or contact support for OCR processing.'
+      )
+    }
+
+    if (emptyPages > 0) {
+      console.warn(
+        `[PDF Parser] ⚠️ ${emptyPages} of ${pdf.numPages} pages are empty. ` +
+        'These may be scanned images requiring OCR.'
+      )
+    }
+
+    const result = fullText.trim()
+
+    if (result.length === 0) {
+      throw new Error('No text content extracted from PDF. The file may be corrupted or image-based.')
+    }
+
+    console.log('[PDF Parser] First 500 chars of final output:', result.substring(0, 500))
+
+    return result
   } catch (error) {
-    console.error('Error extracting text from PDF:', error)
+    console.error('[PDF Parser] ❌ Error extracting text from PDF:', error)
     throw new Error(`Failed to extract text from PDF: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
@@ -183,20 +248,54 @@ export async function parseFile(file: File): Promise<string> {
 
 /**
  * Parse multiple files and return array of extracted text
+ * All parsing happens on the frontend
  */
 export async function parseFiles(files: File[]): Promise<string[]> {
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log(`[File Parser] 📄 Starting to parse ${files.length} file(s)`)
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+
   const results: string[] = []
 
-  for (const file of files) {
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]
+    console.log(`\n[File Parser] Processing file ${i + 1}/${files.length}: ${file.name}`)
+
     try {
       const text = await parseFile(file)
       results.push(text)
+
+      console.log(`[File Parser] ✅ Successfully parsed: ${file.name}`)
+      console.log(`[File Parser] Extracted length: ${text.length} characters`)
+      console.log(`[File Parser] First 300 chars:`)
+      console.log(`────────────────────────────────────────`)
+      console.log(text.substring(0, 300))
+      console.log(`────────────────────────────────────────`)
     } catch (error) {
-      console.error(`Failed to parse ${file.name}:`, error)
+      console.error(`[File Parser] ❌ Failed to parse ${file.name}:`, error)
       // Continue with other files, but add error message
       results.push(`[Error parsing ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}]`)
     }
   }
+
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('[File Parser] 📊 PARSING SUMMARY')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log(`Total files: ${files.length}`)
+  console.log(`Successfully parsed: ${results.filter(r => !r.startsWith('[Error')).length}`)
+  console.log(`Failed: ${results.filter(r => r.startsWith('[Error')).length}`)
+  console.log('\n[File Parser] 📦 COMPLETE PARSED OUTPUT:')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  results.forEach((text, index) => {
+    console.log(`\n[File Parser] File ${index + 1} Output (${text.length} chars):`)
+    console.log('────────────────────────────────────────')
+    console.log(text.substring(0, 500)) // Show first 500 chars
+    if (text.length > 500) {
+      console.log(`\n... (${text.length - 500} more characters)`)
+    }
+    console.log('────────────────────────────────────────')
+  })
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
 
   return results
 }

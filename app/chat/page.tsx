@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { createChatSession, createMessage } from "./actions"
+import { createChatSession, createMessage, generateAIResponse, updateSessionTitle } from "./actions"
 import { toast } from "sonner"
 import Link from "next/link"
 
@@ -37,7 +37,9 @@ export default function ChatPage() {
     setIsCreating(true)
 
     try {
-      const sessionResult = await createChatSession()
+      // Create session with the prompt as title
+      const title = prompt.length > 50 ? prompt.substring(0, 50) + "..." : prompt
+      const sessionResult = await createChatSession(title)
 
       if (sessionResult.error || !sessionResult.data) {
         toast.error("Failed to create new chat")
@@ -47,8 +49,13 @@ export default function ChatPage() {
       // Send the example prompt as first message
       await createMessage(sessionResult.data.id, 'user', prompt)
 
-      // Redirect to the new chat session
+      // Redirect to the new chat session immediately
       router.push(`/chat/${sessionResult.data.id}`)
+
+      // Generate AI response in background (will be visible when page loads)
+      generateAIResponse(sessionResult.data.id, prompt).catch(() => {
+        toast.error("Failed to generate response")
+      })
     } catch (error) {
       toast.error("An error occurred. Please try again.")
     } finally {

@@ -8,16 +8,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Trash2, PenSquare, UserPlus } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { MoreHorizontal, Trash2, PenSquare, Database } from "lucide-react"
 
 interface ChatHeaderProps {
   title?: string
   onRename?: () => void
   onDelete?: () => void
-  onShare?: () => void
+  syncToKB?: boolean | null
+  onSyncToggle?: (enabled: boolean) => void
 }
 
-export function ChatHeader({ title, onRename, onDelete, onShare }: ChatHeaderProps) {
+export function ChatHeader({ title, onRename, onDelete, syncToKB, onSyncToggle }: ChatHeaderProps) {
   return (
     <header className="h-14 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black flex items-center justify-between px-6">
       <div className="flex-1 min-w-0 mr-4">
@@ -26,17 +28,6 @@ export function ChatHeader({ title, onRename, onDelete, onShare }: ChatHeaderPro
         </h1>
       </div>
       <div className="flex items-center gap-2">
-        {title && onShare && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onShare}
-            className="gap-2 h-8 border-gray-300 dark:border-gray-700"
-          >
-            <UserPlus className="h-4 w-4" />
-            <span className="hidden sm:inline">Share</span>
-          </Button>
-        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -47,13 +38,28 @@ export function ChatHeader({ title, onRename, onDelete, onShare }: ChatHeaderPro
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-56">
             {title && (
               <>
                 <DropdownMenuItem onClick={onRename} className="cursor-pointer">
                   <PenSquare className="mr-2 h-4 w-4" />
                   Rename
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            {syncToKB !== null && onSyncToggle && (
+              <>
+                <div className="flex items-center justify-between px-2 py-2">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">Sync to KB</span>
+                  </div>
+                  <Switch
+                    checked={syncToKB === true}
+                    onCheckedChange={onSyncToggle}
+                  />
+                </div>
                 <DropdownMenuSeparator />
               </>
             )}

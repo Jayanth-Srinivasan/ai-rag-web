@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { User } from "@supabase/supabase-js";
 import { Profile, ChatSession } from "@/types/database";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,6 @@ import {
   Settings,
   LogOut,
   MessageSquare,
-  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -24,8 +23,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/app/auth/actions";
+import { createChatSession } from "@/app/chat/actions";
 import { toast } from "sonner";
-import { JoinDialog } from "./join-dialog";
+import { Loader2 } from "lucide-react";
 
 type SessionWithDate = ChatSession & {
   updatedAtDate: Date;
@@ -76,8 +76,19 @@ interface ChatSidebarProps {
 export function ChatSidebar({ user, profile, sessions }: ChatSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [joinDialogOpen, setJoinDialogOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const groupedConversations = groupConversationsByDate(sessions);
+
+  const handleNewChat = () => {
+    startTransition(async () => {
+      const result = await createChatSession();
+      if (result.error || !result.data) {
+        toast.error("Failed to create new chat");
+        return;
+      }
+      router.push(`/chat/${result.data.id}`);
+    });
+  };
 
   const handleSignOut = async () => {
     try {
@@ -95,8 +106,6 @@ export function ChatSidebar({ user, profile, sessions }: ChatSidebarProps) {
   const displayName = profile?.name || user.email || "User";
 
   return (
-    <>
-      <JoinDialog open={joinDialogOpen} onOpenChange={setJoinDialogOpen} />
       <div className="w-64 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-black flex flex-col">
         <div className="p-3 border-b border-gray-200 dark:border-gray-800">
           <div className="flex items-center gap-2">
@@ -109,22 +118,14 @@ export function ChatSidebar({ user, profile, sessions }: ChatSidebarProps) {
           </div>
         </div>
         <div className="p-3">
-          <div className="flex gap-2">
-            <Link href="/chat" className="flex-1">
-              <Button className="w-full justify-center gap-2 bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black">
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">New</span>
-              </Button>
-            </Link>
-            <Button
-              variant="outline"
-              onClick={() => setJoinDialogOpen(true)}
-              className="flex-1 justify-center gap-2 border-gray-300 dark:border-gray-700"
-            >
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Join</span>
-            </Button>
-          </div>
+          <Button
+            onClick={handleNewChat}
+            disabled={isPending}
+            className="w-full justify-center gap-2 bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black"
+          >
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            New Chat
+          </Button>
         </div>
         <div className="px-3">
           <div className="border-t border-gray-200 dark:border-gray-800" />
@@ -218,6 +219,5 @@ export function ChatSidebar({ user, profile, sessions }: ChatSidebarProps) {
           </DropdownMenu>
         </div>
       </div>
-    </>
   );
 }

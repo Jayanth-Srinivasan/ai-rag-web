@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { uploadFile as storageUploadFile, deleteFile as storageDeleteFile } from '@/lib/supabase/storage-server'
 import { generateStoragePath, createContentPreview } from '@/lib/file-utils'
-import { callRAGEndpoint } from '@/lib/rag-service'
+import { callKBIndexEndpoint } from '@/lib/rag-service'
 
 const STORAGE_BUCKET = 'documents'
 
@@ -120,7 +120,7 @@ export async function uploadAndIndexDocument(
 }
 
 /**
- * Index document content in RAG system
+ * Index document content in RAG system via KB endpoint
  */
 async function indexDocumentInRAG(fileContent: string) {
   const supabase = await createClient()
@@ -131,16 +131,13 @@ async function indexDocumentInRAG(fileContent: string) {
   }
 
   try {
-    // Call RAG endpoint to index the document (callRAGEndpoint will map to backend fields internally)
-    await callRAGEndpoint({
+    // Call KB index endpoint to index the document to user's knowledge base
+    await callKBIndexEndpoint({
       user_id: user.id,
-      session_id: 'knowledge_base', // Use consistent identifier for knowledge base
-      message: 'Indexing document for knowledge base',
-      timestamp: new Date().toISOString(),
-      session_file_content: [fileContent],
+      file_contents: [fileContent],
     })
   } catch (error) {
-    console.error('RAG indexing error:', error)
+    console.error('KB indexing error:', error)
     throw error
   }
 }

@@ -272,6 +272,84 @@ export async function createMessage(
 }
 
 /**
+ * Delete a message from a chat session
+ */
+export async function deleteMessage(sessionId: string, messageId: string) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  // Verify user owns this session
+  const { data: session } = await supabase
+    .from('chat_sessions')
+    .select('id')
+    .eq('id', sessionId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!session) {
+    return { error: 'Session not found or unauthorized' }
+  }
+
+  const { error } = await supabase
+    .from('chat_messages')
+    .delete()
+    .eq('id', messageId)
+    .eq('session_id', sessionId)
+
+  if (error) {
+    console.error('Failed to delete message:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath(`/chat/${sessionId}`)
+  return { error: null }
+}
+
+/**
+ * Update message content
+ */
+export async function updateMessage(sessionId: string, messageId: string, content: string) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  // Verify user owns this session
+  const { data: session } = await supabase
+    .from('chat_sessions')
+    .select('id')
+    .eq('id', sessionId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!session) {
+    return { error: 'Session not found or unauthorized' }
+  }
+
+  const { error } = await supabase
+    .from('chat_messages')
+    .update({ content })
+    .eq('id', messageId)
+    .eq('session_id', sessionId)
+
+  if (error) {
+    console.error('Failed to update message:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath(`/chat/${sessionId}`)
+  return { error: null }
+}
+
+/**
  * Generate AI response by calling the RAG endpoint
  * Stores both the user message and AI response in the database
  * Optionally handles file uploads for chat session
@@ -279,7 +357,8 @@ export async function createMessage(
 export async function generateAIResponse(
   sessionId: string,
   userMessage: string,
-  fileContents?: string[]
+  fileContents?: string[],
+  indexUser: boolean = false
 ) {
   const supabase = await createClient()
 
@@ -290,13 +369,13 @@ export async function generateAIResponse(
   }
 
   try {
-    // Prepare RAG request (callRAGEndpoint will map to backend fields internally)
+    // Prepare RAG request matching backend API specification
     const ragRequest = {
       user_id: user.id,
       session_id: sessionId,
-      message: userMessage,
-      timestamp: new Date().toISOString(),
-      session_file_content: fileContents && fileContents.length > 0 ? fileContents : null,
+      question: userMessage,
+      file_contents: fileContents && fileContents.length > 0 ? fileContents : undefined,
+      index_user: indexUser,
     }
 
     // Call external RAG endpoint

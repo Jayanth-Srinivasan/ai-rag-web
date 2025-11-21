@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button"
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light")
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
+
     // Check for saved theme preference or default to 'light'
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -22,6 +25,21 @@ export function ThemeToggle() {
     setTheme(newTheme)
     localStorage.setItem("theme", newTheme)
     document.documentElement.classList.toggle("dark", newTheme === "dark")
+  }
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9"
+        aria-label="Toggle theme"
+        disabled
+      >
+        <Moon className="h-4 w-4" />
+      </Button>
+    )
   }
 
   return (

@@ -13,9 +13,12 @@ interface ChatInputProps {
   sessionId: string
   onSendMessage: (message: string, fileContents?: string[], documentIds?: string[]) => Promise<void>
   isLoading?: boolean
+  syncToKB?: boolean | null
+  onFirstFileUpload?: (files: File[], extractedTexts: string[]) => void
 }
 
-export function ChatInput({ sessionId, onSendMessage, isLoading = false }: ChatInputProps) {
+export function ChatInput({ sessionId, onSendMessage, isLoading = false, syncToKB, onFirstFileUpload }: ChatInputProps) {
+  const [hasUploadedFiles, setHasUploadedFiles] = useState(false)
   const [message, setMessage] = useState("")
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [isParsing, setIsParsing] = useState(false)
@@ -47,6 +50,12 @@ export function ChatInput({ sessionId, onSendMessage, isLoading = false }: ChatI
         try {
           // Parse files to extract text content
           fileContents = await parseFiles(filesToProcess)
+
+          // Show KB sync dialog on first file upload
+          if (!hasUploadedFiles && onFirstFileUpload) {
+            onFirstFileUpload(filesToProcess, fileContents)
+            setHasUploadedFiles(true)
+          }
 
           // Upload each file to Supabase Storage
           const uploadPromises = filesToProcess.map(async (file, index) => {
@@ -147,24 +156,31 @@ export function ChatInput({ sessionId, onSendMessage, isLoading = false }: ChatI
 
       {/* Selected files display */}
       {selectedFiles.length > 0 && (
-        <div className="px-4 pt-3 pb-2 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+        <div className="mx-4 mb-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-800">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+            {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''} attached
+          </p>
           <div className="flex flex-wrap gap-2">
             {selectedFiles.map((file, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg text-sm"
+                className="group flex items-center gap-2.5 px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-shadow"
               >
-                <span className="text-lg">{getFileIcon(file.name)}</span>
-                <span className="text-gray-700 dark:text-gray-300 max-w-[150px] truncate">
-                  {file.name}
-                </span>
-                <span className="text-gray-500 dark:text-gray-500 text-xs">
-                  {formatFileSize(file.size)}
-                </span>
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 text-lg shrink-0">
+                  {getFileIcon(file.name)}
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate max-w-[140px]">
+                    {file.name}
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-500">
+                    {formatFileSize(file.size)}
+                  </span>
+                </div>
                 <button
                   type="button"
                   onClick={() => removeFile(index)}
-                  className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  className="ml-1 p-1 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   disabled={isLoading || isParsing}
                 >
                   <X className="h-4 w-4" />
@@ -176,7 +192,7 @@ export function ChatInput({ sessionId, onSendMessage, isLoading = false }: ChatI
       )}
 
       {/* Input area */}
-      <div className="flex items-end gap-3 p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-black">
+      <div className="flex items-end gap-3 p-4 bg-white dark:bg-black">
         <Button
           type="button"
           size="icon"

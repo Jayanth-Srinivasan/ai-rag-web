@@ -1,55 +1,119 @@
-import { RAGRequest, RAGResponse, RAGError } from "@/types/rag"
+import { RAGRequest, RAGResponse, RAGError, UserKBUploadRequest, UserKBUploadResponse } from "@/types/rag"
 import { MessageSource } from "@/types/database"
+
+/**
+ * Calls the KB indexing endpoint to index documents in user's knowledge base
+ */
+export async function callKBIndexEndpoint(
+  params: { user_id: string; file_contents: string[] }
+): Promise<UserKBUploadResponse> {
+  const baseUrl = process.env.RAG_API_URL?.replace('/ask', '') || ''
+  const kbUrl = `${baseUrl}/kb/user/upload`
+
+  const requestBody: UserKBUploadRequest = {
+    user_id: params.user_id,
+    file_contents: params.file_contents,
+  }
+
+  // Dev mode check
+  if (!baseUrl || baseUrl.includes('localhost') || baseUrl.includes('example')) {
+    console.log("\n[KB Index] 🔧 DEVELOPMENT MODE - KB endpoint not configured")
+    console.log("[KB Index] Would POST to:", kbUrl)
+    console.log("[KB Index] Payload:", JSON.stringify(requestBody, null, 2))
+    return {
+      user_id: params.user_id,
+      status: "mock_indexed",
+      detail: [{ mock: true }],
+    }
+  }
+
+  try {
+    console.log("[KB Index] 🚀 Indexing to user KB:", kbUrl)
+
+    const response = await fetch(kbUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: "Failed to parse error" }))
+      throw new Error(errorData.error || `KB endpoint returned ${response.status}`)
+    }
+
+    const data: UserKBUploadResponse = await response.json()
+    console.log("[KB Index] ✅ Successfully indexed to user KB")
+    return data
+  } catch (error) {
+    console.error("[KB Index] Failed:", error)
+    throw error
+  }
+}
 
 /**
  * Calls the external RAG endpoint with the provided parameters
  *
- * @param params - Object containing user_id, session_id, message, timestamp, and session_file_content
+ * @param params - Object containing user_id, session_id, question, file_contents, and index_user
  * @returns Promise with mapped response containing message and MessageSource objects
  * @throws Error if the request fails or returns an error
  */
 export async function callRAGEndpoint(
-  params: Omit<RAGRequest, 'question' | 'file_content'>
+  params: {
+    user_id: string
+    session_id: string
+    question?: string
+    file_contents?: string[]
+    index_user?: boolean
+  }
 ): Promise<{ message: string; sources?: MessageSource[] }> {
   const ragUrl = process.env.RAG_API_URL
 
-  // Build request with both frontend fields and backend-expected fields
+  // Build request body matching backend API specification exactly
   const requestBody: RAGRequest = {
-    // Frontend fields (for future backend use)
     user_id: params.user_id,
     session_id: params.session_id,
-    message: params.message,
-    timestamp: params.timestamp,
-    session_file_content: params.session_file_content,
-
-    // Backend-expected fields (mapped from above)
-    question: params.message,
-    file_content: params.session_file_content,
+    file_contents: params.file_contents,
+    question: params.question,
+    index_user: params.index_user ?? false,  // Default to false if not provided
   }
 
   // DEVELOPMENT MODE: Console log payload if RAG endpoint is not configured
   if (!ragUrl || ragUrl.includes('localhost') || ragUrl.includes('example')) {
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     console.log("[RAG Service] 🔧 DEVELOPMENT MODE - Backend not configured")
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    console.log("[RAG Service] 📦 Full Request Payload:")
+    console.log("[RAG Service] 📦 FULL REQUEST PAYLOAD (JSON):")
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     console.log(JSON.stringify(requestBody, null, 2))
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    console.log("[RAG Service] 📊 Request Summary:")
-    console.log("  - User ID:", requestBody.user_id)
-    console.log("  - Session ID:", requestBody.session_id)
-    console.log("  - Question:", requestBody.question)
-    console.log("  - Timestamp:", requestBody.timestamp)
-    console.log("  - Has Files:", requestBody.file_content !== null && requestBody.file_content.length > 0)
-    console.log("  - File Count:", requestBody.file_content?.length || 0)
-    if (requestBody.file_content && requestBody.file_content.length > 0) {
-      console.log("  - File Contents Preview:")
-      requestBody.file_content.forEach((content, index) => {
-        const preview = content.substring(0, 100).replace(/\n/g, ' ')
-        console.log(`    [${index + 1}] ${preview}... (${content.length} chars)`)
+    console.log("[RAG Service] 📊 REQUEST SUMMARY:")
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    console.log("  User ID:", requestBody.user_id)
+    console.log("  Session ID:", requestBody.session_id)
+    console.log("  Question:", requestBody.question || '(none)')
+    console.log("  Index User:", requestBody.index_user)
+    console.log("  Has Files:", requestBody.file_contents !== undefined && requestBody.file_contents !== null && requestBody.file_contents.length > 0)
+    console.log("  File Count:", requestBody.file_contents?.length || 0)
+
+    if (requestBody.file_contents && requestBody.file_contents.length > 0) {
+      console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+      console.log("[RAG Service] 📄 FILE CONTENTS DETAILS:")
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+      requestBody.file_contents.forEach((content, index) => {
+        console.log(`\n[File ${index + 1}/${requestBody.file_contents!.length}]`)
+        console.log(`  Length: ${content.length} characters`)
+        console.log(`  First 500 chars:`)
+        console.log('  ────────────────────────────────────────')
+        console.log('  ' + content.substring(0, 500).replace(/\n/g, '\n  '))
+        if (content.length > 500) {
+          console.log(`\n  ... (${content.length - 500} more characters)`)
+        }
+        console.log('  ────────────────────────────────────────')
       })
     }
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+    console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     console.log("[RAG Service] ✅ Returning mock response")
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
@@ -64,15 +128,31 @@ export async function callRAGEndpoint(
   }
 
   try {
-    console.log("[RAG Service] Calling endpoint:", ragUrl)
-    console.log("[RAG Service] Request params:", {
-      user_id: requestBody.user_id,
-      session_id: requestBody.session_id,
-      question: requestBody.question.substring(0, 50) + "...",
-      timestamp: requestBody.timestamp,
-      has_files: requestBody.file_content !== null && requestBody.file_content.length > 0,
-      file_count: requestBody.file_content?.length || 0,
-    })
+    console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    console.log("[RAG Service] 🚀 SENDING REQUEST TO BACKEND")
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    console.log("Endpoint:", ragUrl)
+    console.log("\n[RAG Service] 📦 COMPLETE PAYLOAD BEING SENT:")
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    console.log(JSON.stringify(requestBody, null, 2))
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+    console.log("\n[RAG Service] 📊 PAYLOAD SUMMARY:")
+    console.log("  User ID:", requestBody.user_id)
+    console.log("  Session ID:", requestBody.session_id)
+    console.log("  Question:", requestBody.question || '(none)')
+    console.log("  Index User:", requestBody.index_user)
+    console.log("  Has Files:", requestBody.file_contents !== undefined && requestBody.file_contents !== null && requestBody.file_contents.length > 0)
+    console.log("  File Count:", requestBody.file_contents?.length || 0)
+
+    if (requestBody.file_contents && requestBody.file_contents.length > 0) {
+      console.log("\n[RAG Service] 📄 FILE CONTENTS IN PAYLOAD:")
+      requestBody.file_contents.forEach((content, index) => {
+        console.log(`\n  [File ${index + 1}] Length: ${content.length} chars`)
+        console.log(`  First 300 chars: ${content.substring(0, 300).replace(/\n/g, ' ')}...`)
+      })
+    }
+    console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
     const response = await fetch(ragUrl, {
       method: "POST",
