@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { MessageSource } from '@/types/database'
+import { RAGReports, RAGAnalysis, RAGCharts } from '@/types/rag'
 import { callRAGEndpoint } from '@/lib/rag-service'
 import { uploadDocument } from '@/app/documents/actions'
 
@@ -223,7 +224,10 @@ export async function createMessage(
   role: 'user' | 'assistant',
   content: string,
   sources?: MessageSource[],
-  documentIds?: string[]
+  documentIds?: string[],
+  reports?: RAGReports | null,
+  analysis?: RAGAnalysis | null,
+  charts?: RAGCharts | null
 ) {
   const supabase = await createClient()
 
@@ -253,6 +257,9 @@ export async function createMessage(
       content,
       sources: sources as never, // JSONB type
       attached_document_ids: documentIds || null,
+      reports: reports as never, // JSONB type
+      analysis: analysis as never, // JSONB type
+      charts: charts as never, // JSONB type
     })
     .select()
     .single()
@@ -379,12 +386,16 @@ export async function generateAIResponse(
     // Call external RAG endpoint
     const ragResponse = await callRAGEndpoint(ragRequest)
 
-    // Store AI response in database
+    // Store AI response in database with reports, analysis, charts
     const result = await createMessage(
       sessionId,
       'assistant',
       ragResponse.message,
-      ragResponse.sources
+      ragResponse.sources,
+      undefined, // documentIds
+      ragResponse.reports,
+      ragResponse.analysis,
+      ragResponse.charts
     )
 
     return result

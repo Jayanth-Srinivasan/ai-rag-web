@@ -1,4 +1,5 @@
 import { Database } from './supabase'
+import { RAGReports, RAGAnalysis, RAGCharts } from './rag'
 
 // Export the Database type for use with Supabase client
 export type { Database }
@@ -45,6 +46,9 @@ export interface Message {
   content: string
   sources?: MessageSource[]
   attached_documents?: AttachedDocument[]
+  reports?: RAGReports | null
+  analysis?: RAGAnalysis | null
+  charts?: RAGCharts | null
   created_at: string
   session_id?: string
 }

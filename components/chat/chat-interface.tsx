@@ -348,6 +348,9 @@ export function ChatInterface({
                     content: message.content,
                     sources: message.sources,
                     attached_documents: message.attached_documents,
+                    reports: message.reports,
+                    analysis: message.analysis,
+                    charts: message.charts,
                     timestamp: new Date(message.created_at),
                   }}
                   onRetry={handleRetry}

@@ -13,10 +13,78 @@ export interface RAGRequest {
 }
 
 /**
+ * CSV exports in reports
+ */
+export interface CSVExports {
+  [key: string]: string  // filename -> CSV content
+}
+
+/**
+ * Reports section of the response
+ */
+export interface RAGReports {
+  report_md: string
+  csv_exports: CSVExports
+}
+
+/**
+ * Analysis aggregate data
+ */
+export interface AnalysisAggregate {
+  total_cost: number
+  by_service: Array<{ service: string; cost: number }>
+}
+
+/**
+ * Idle resource analysis
+ */
+export interface IdleResource {
+  resource_id: string
+  inventory_state: string
+  cost: number
+}
+
+/**
+ * Rightsizing recommendation
+ */
+export interface RightsizingRecommendation {
+  resource_id: string
+  instance_type: string
+  avg_cpu: number
+  recommended_action: string
+  estimated_monthly_saving: number
+}
+
+/**
+ * Analysis section of the response
+ */
+export interface RAGAnalysis {
+  aggregate: AnalysisAggregate
+  idle_resources: IdleResource[]
+  rightsizing: RightsizingRecommendation[]
+  reserved_candidates: unknown[]
+}
+
+/**
+ * Charts section of the response
+ */
+export interface RAGCharts {
+  top_services_png_base64?: string
+  [key: string]: string | undefined  // Allow other chart types
+}
+
+/**
  * Response received from the RAG endpoint (FastAPI backend format)
  */
 export interface RAGResponse {
-  answer: string
+  user_id?: string
+  session_id?: string
+  message: string
+  reports?: RAGReports | null
+  analysis?: RAGAnalysis | null
+  charts?: RAGCharts | null
+  // Legacy fields for backwards compatibility
+  answer?: string
   sources?: string[]
   index_status?: string
 }
