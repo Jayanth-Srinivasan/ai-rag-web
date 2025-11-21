@@ -1,4 +1,4 @@
-import { RAGRequest, RAGResponse, RAGError, UserKBUploadRequest, UserKBUploadResponse } from "@/types/rag"
+import { RAGRequest, RAGResponse, RAGError, UserKBUploadRequest, UserKBUploadResponse, RAGReports, RAGAnalysis, RAGCharts } from "@/types/rag"
 import { MessageSource } from "@/types/database"
 
 /**
@@ -86,7 +86,13 @@ export async function callRAGEndpoint(
     file_contents?: string[]
     index_user?: boolean
   }
-): Promise<{ message: string; sources?: MessageSource[] }> {
+): Promise<{
+  message: string
+  sources?: MessageSource[]
+  reports?: RAGReports | null
+  analysis?: RAGAnalysis | null
+  charts?: RAGCharts | null
+}> {
   const baseUrl = process.env.RAG_API_BASE_URL || ''
   const ragUrl = `${baseUrl}/chat`
 
@@ -146,6 +152,9 @@ export async function callRAGEndpoint(
         { title: "Mock Source 1", page: 1 },
         { title: "Mock Source 2", page: 5 },
       ],
+      reports: null,
+      analysis: null,
+      charts: null,
     }
   }
 
@@ -197,20 +206,35 @@ export async function callRAGEndpoint(
 
     const data: RAGResponse = await response.json()
 
+    // Handle both new format (message) and legacy format (answer)
+    const messageContent = data.message || data.answer || ''
+
     console.log("[RAG Service] Success! Response received")
-    console.log("[RAG Service] Answer length:", data.answer.length)
+    console.log("[RAG Service] Message length:", messageContent.length)
     console.log("[RAG Service] Sources count:", data.sources?.length || 0)
+    console.log("[RAG Service] Has reports:", !!data.reports)
+    console.log("[RAG Service] Has analysis:", !!data.analysis)
+    console.log("[RAG Service] Has charts:", !!data.charts)
     if (data.index_status) {
       console.log("[RAG Service] Index status:", data.index_status)
     }
 
     // Map response to frontend format, parsing out any metadata from the answer
-    const mappedResponse: { message: string; sources?: MessageSource[] } = {
-      message: parseResponseContent(data.answer),
+    const mappedResponse: {
+      message: string
+      sources?: MessageSource[]
+      reports?: RAGReports | null
+      analysis?: RAGAnalysis | null
+      charts?: RAGCharts | null
+    } = {
+      message: parseResponseContent(messageContent),
       sources: data.sources?.map((sourceText, index) => ({
         title: `Source ${index + 1}`,
         page: undefined,
       })),
+      reports: data.reports || null,
+      analysis: data.analysis || null,
+      charts: data.charts || null,
     }
 
     return mappedResponse
