@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { User } from "@supabase/supabase-js";
 import { Profile, ChatSession } from "@/types/database";
 import { Button } from "@/components/ui/button";

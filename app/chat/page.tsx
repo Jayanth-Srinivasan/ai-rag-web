@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { createChatSession, createMessage, generateAIResponse, updateSessionTitle } from "./actions"
+import { createChatSession, createMessage, generateAIResponse } from "./actions"
 import { toast } from "sonner"
 import Link from "next/link"
 

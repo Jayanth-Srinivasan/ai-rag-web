@@ -29,7 +29,9 @@ export default async function ChatSessionPage({
     id: msg.id,
     role: msg.role as 'user' | 'assistant',
     content: msg.content,
-    sources: msg.sources ? (msg.sources as any[]) : undefined,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sources: msg.sources as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     attached_documents: (msg as any).attached_documents,
     created_at: msg.created_at,
     session_id: msg.session_id,

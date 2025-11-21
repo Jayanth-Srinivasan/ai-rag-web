@@ -27,11 +27,12 @@ export default async function ChatLayout({
     getChatSessions(),
   ])
 
-  let { data: profile, error: profileError } = profileResult
+  const { data: profile, error: profileError } = profileResult
+  let currentProfile = profile
 
   // Fallback: Create profile if it doesn't exist
   // This handles cases where the database trigger wasn't set up
-  if (!profile && profileError?.code === 'PGRST116') {
+  if (!currentProfile && profileError?.code === 'PGRST116') {
     // Extract name from metadata or use email
     const userName = (user.user_metadata?.name as string) || user.email?.split('@')[0] || 'User'
 
@@ -45,7 +46,7 @@ export default async function ChatLayout({
       .single()
 
     if (!insertError && newProfile) {
-      profile = newProfile as Profile
+      currentProfile = newProfile as Profile
     } else if (insertError) {
       console.error('Failed to create fallback profile:', insertError)
     }
@@ -55,10 +56,10 @@ export default async function ChatLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <WelcomeToast userName={profile?.name || user.email || 'User'} />
+      <WelcomeToast userName={currentProfile?.name || user.email || 'User'} />
       <ChatSidebar
         user={user}
-        profile={profile as Profile | null}
+        profile={currentProfile as Profile | null}
         sessions={sessions}
       />
       <main className="flex-1 overflow-hidden">

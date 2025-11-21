@@ -1,4 +1,4 @@
-import { MessageSource } from "./database"
+// Types for RAG API
 
 /**
  * Request payload sent to the RAG endpoint
@@ -43,5 +43,5 @@ export interface UserKBUploadRequest {
 export interface UserKBUploadResponse {
   user_id: string
   status: string
-  detail: any[]
+  detail: Array<{ mock?: boolean; [key: string]: unknown }>
 }

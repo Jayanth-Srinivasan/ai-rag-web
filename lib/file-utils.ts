@@ -77,7 +77,6 @@ export function getFileTypeName(filename: string): string {
 export function validateFileType(file: File): boolean {
   const fileType = file.type.toLowerCase()
   const fileName = file.name.toLowerCase()
-  const extension = getFileExtension(fileName)
 
   // Check MIME type
   if (fileType && fileType in ALLOWED_FILE_TYPES) {

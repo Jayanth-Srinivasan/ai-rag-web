@@ -2,10 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import type { ChatSession, ChatMessage, MessageSource } from '@/types/database'
+import type { MessageSource } from '@/types/database'
 import { callRAGEndpoint } from '@/lib/rag-service'
-import type { RAGRequest } from '@/types/rag'
 import { uploadDocument } from '@/app/documents/actions'
 
 // ============================================================================
@@ -253,7 +251,7 @@ export async function createMessage(
       session_id: sessionId,
       role,
       content,
-      sources: sources as any, // JSONB type
+      sources: sources as never, // JSONB type
       attached_document_ids: documentIds || null,
     })
     .select()
