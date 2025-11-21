@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { FileText, RefreshCw, Pencil, Copy, Check, X } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
+import ReactMarkdown from "react-markdown"
 
 export type Message = {
   id: string
@@ -157,7 +158,13 @@ export function MessageBubble({ message, onRetry, onEdit, isLoading }: MessageBu
             )}
             onDoubleClick={handleDoubleClick}
           >
-            <p className="leading-relaxed whitespace-pre-wrap">{message.content}</p>
+            {isUser ? (
+              <p className="leading-relaxed whitespace-pre-wrap">{message.content}</p>
+            ) : (
+              <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-pre:my-2 prose-code:text-xs prose-code:bg-gray-200 dark:prose-code:bg-gray-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded">
+                <ReactMarkdown>{message.content}</ReactMarkdown>
+              </div>
+            )}
           </div>
         )}
 
