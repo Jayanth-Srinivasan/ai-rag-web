@@ -12,7 +12,7 @@ export function Navigation() {
             <MessageSquare className="h-5 w-5 text-white dark:text-black" />
           </div>
           <span className="text-black dark:text-white">
-            RAG Chat
+            CloudCost AI
           </span>
         </Link>
 

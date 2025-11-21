@@ -99,13 +99,13 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
               <Upload className="h-8 w-8 text-white dark:text-black" />
             </div>
             <h3 className="text-lg font-semibold mb-2">
-              {isDragging ? "Drop files here" : "Upload Documents"}
+              {isDragging ? "Drop files here" : "Upload Cloud Data"}
             </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Drag and drop or click to browse
+              Billing reports, usage data, or resource configurations
             </p>
             <p className="text-xs text-muted-foreground">
-              Supported formats: PDF, TXT, DOC, DOCX (Max 10MB)
+              Supported formats: PDF, CSV, TXT, DOC, DOCX (Max 10MB)
             </p>
           </div>
           <input
@@ -113,7 +113,7 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
             type="file"
             className="hidden"
             multiple
-            accept=".pdf,.txt,.doc,.docx"
+            accept=".pdf,.txt,.doc,.docx,.csv"
             onChange={handleFileSelect}
           />
         </label>

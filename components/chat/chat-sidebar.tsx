@@ -113,7 +113,7 @@ export function ChatSidebar({ user, profile, sessions }: ChatSidebarProps) {
               <MessageSquare className="h-4 w-4 text-white dark:text-black" />
             </div>
             <span className="font-semibold text-black dark:text-white">
-              RAG Chat
+              CloudCost AI
             </span>
           </div>
         </div>
@@ -140,7 +140,7 @@ export function ChatSidebar({ user, profile, sessions }: ChatSidebarProps) {
               )}
             >
               <Database className="h-4 w-4" />
-              Knowledge Base
+              Data Sources
             </Button>
           </Link>
         </div>

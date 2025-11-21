@@ -129,14 +129,14 @@ export default function KnowledgeBasePage() {
   return (
     <div className="h-full flex flex-col bg-white dark:bg-black">
       <div className="p-6 border-b border-gray-200 dark:border-gray-800">
-        <h1 className="text-2xl font-semibold text-black dark:text-white mb-6">Knowledge Base</h1>
+        <h1 className="text-2xl font-semibold text-black dark:text-white mb-6">Data Sources</h1>
         <div className="mb-6">
           <DocumentUpload onUpload={handleUpload} />
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search documents..."
+            placeholder="Search data sources..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 border-gray-200 dark:border-gray-800"
@@ -153,11 +153,11 @@ export default function KnowledgeBasePage() {
           <div className="text-center py-12">
             <FileText className="h-12 w-12 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
             <p className="text-gray-600 dark:text-gray-400 mb-2">
-              {searchQuery ? "No documents found" : "No documents yet"}
+              {searchQuery ? "No data sources found" : "No data sources yet"}
             </p>
             {!searchQuery && (
               <p className="text-sm text-gray-500 dark:text-gray-500">
-                Upload documents to build your knowledge base
+                Upload billing reports, usage data, or resource configurations
               </p>
             )}
           </div>

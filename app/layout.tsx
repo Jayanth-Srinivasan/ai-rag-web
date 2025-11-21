@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RAG Chat - Chat with Your Documents",
-  description: "Upload your documents and get intelligent answers powered by Retrieval-Augmented Generation",
+  title: "CloudCost AI - Cloud Infrastructure Cost Optimization Advisor",
+  description: "AI-powered cloud cost optimization advisor that analyzes billing data, resource usage, and configurations to deliver actionable savings recommendations",
 };
 
 export default function RootLayout({
