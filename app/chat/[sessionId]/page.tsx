@@ -33,6 +33,12 @@ export default async function ChatSessionPage({
     sources: msg.sources as any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     attached_documents: (msg as any).attached_documents,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    reports: (msg as any).reports,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    analysis: (msg as any).analysis,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    charts: (msg as any).charts,
     created_at: msg.created_at,
     session_id: msg.session_id,
   }))
