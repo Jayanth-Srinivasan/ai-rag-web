@@ -2,8 +2,15 @@ import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { FileText, RefreshCw, Pencil, Copy, Check, X, Download, BarChart3, AlertTriangle, TrendingDown } from "lucide-react"
-import { useState } from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { FileText, RefreshCw, Pencil, Copy, Check, X, Download, BarChart3, AlertTriangle, TrendingDown, Eye, FileDown } from "lucide-react"
+import { useState, useRef } from "react"
 import { toast } from "sonner"
 import ReactMarkdown from "react-markdown"
 import type { MessageReports, MessageAnalysis, MessageCharts } from "@/types/database"
@@ -44,6 +51,51 @@ function downloadCSV(filename: string, content: string) {
   link.download = filename
   link.click()
   URL.revokeObjectURL(url)
+}
+
+// Helper to download report as PDF (using print dialog)
+function downloadReportAsPDF(reportContent: string, filename: string = 'report.pdf') {
+  // Create a new window with the report content for printing
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) {
+    toast.error('Please allow popups to download PDF')
+    return
+  }
+
+  // Clean markdown formatting for better PDF output
+  const cleanContent = reportContent
+    .replace(/```[\s\S]*?```/g, (match) => `<pre>${match.slice(3, -3)}</pre>`)
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+    .replace(/^\- (.*$)/gm, '<li>$1</li>')
+    .replace(/^\| (.*) \|$/gm, '<tr><td>$1</td></tr>')
+    .replace(/\n/g, '<br/>')
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Report</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        h1 { color: #1a1a1a; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        h2 { color: #333; margin-top: 20px; }
+        h3 { color: #555; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+        table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+        td, th { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        li { margin: 5px 0; }
+        @media print { body { padding: 0; } }
+      </style>
+    </head>
+    <body>${cleanContent}</body>
+    </html>
+  `)
+  printWindow.document.close()
+  printWindow.print()
 }
 
 // Chart display component
@@ -137,6 +189,13 @@ function AnalysisHighlights({ analysis }: { analysis: MessageAnalysis }) {
 // Reports download component
 function ReportsSection({ reports }: { reports: MessageReports }) {
   const csvFiles = reports.csv_exports ? Object.entries(reports.csv_exports) : []
+  const hasReport = reports.report_md && reports.report_md.trim().length > 0
+
+  // Clean the markdown content (remove wrapping code blocks if present)
+  const cleanReportMd = reports.report_md
+    ?.replace(/^```markdown\n?/, '')
+    .replace(/\n?```$/, '')
+    .trim() || ''
 
   return (
     <div className="mt-3 space-y-3">
@@ -145,25 +204,60 @@ function ReportsSection({ reports }: { reports: MessageReports }) {
         Reports & Downloads
       </div>
 
-      {csvFiles.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {csvFiles.map(([filename, content]) => (
-            <Button
-              key={filename}
-              variant="outline"
-              size="sm"
-              className="text-xs gap-1"
-              onClick={() => {
-                downloadCSV(filename, content)
-                toast.success(`Downloaded ${filename}`)
-              }}
-            >
-              <Download className="h-3 w-3" />
-              {filename}
-            </Button>
-          ))}
-        </div>
-      )}
+      <div className="flex flex-wrap gap-2">
+        {/* View Report Button */}
+        {hasReport && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="text-xs gap-1">
+                <Eye className="h-3 w-3" />
+                View Report
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Cost Optimization Report</DialogTitle>
+              </DialogHeader>
+              <div className="prose prose-sm dark:prose-invert max-w-none mt-4">
+                <ReactMarkdown>{cleanReportMd}</ReactMarkdown>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Download as PDF */}
+        {hasReport && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs gap-1"
+            onClick={() => {
+              downloadReportAsPDF(cleanReportMd, 'cost-optimization-report.pdf')
+              toast.success('Opening PDF print dialog...')
+            }}
+          >
+            <FileDown className="h-3 w-3" />
+            Download PDF
+          </Button>
+        )}
+
+        {/* CSV Downloads */}
+        {csvFiles.map(([filename, content]) => (
+          <Button
+            key={filename}
+            variant="outline"
+            size="sm"
+            className="text-xs gap-1"
+            onClick={() => {
+              downloadCSV(filename, content)
+              toast.success(`Downloaded ${filename}`)
+            }}
+          >
+            <Download className="h-3 w-3" />
+            {filename}
+          </Button>
+        ))}
+      </div>
     </div>
   )
 }
