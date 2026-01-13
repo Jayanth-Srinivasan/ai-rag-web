@@ -1,0 +1,106 @@
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import confetti from "canvas-confetti"
+
+const USE_CASES = [
+  "AI Health Assistant",
+  "Smart City Traffic System",
+  "Fraud Detection Engine",
+  "Climate Change Predictor",
+  "Autonomous Farming Bot",
+  "Virtual Legal Advisor",
+]
+
+const TEAM_MAPPING: Record<string, number> = {
+  "Team 1": 3, // Usecase 4 (0-based)
+  "Team 2": 2, // Usecase 3
+  "Team 3": 5, // Usecase 6
+}
+
+export default function Page() {
+  const [rotation, setRotation] = useState(0)
+  const [usedTeams, setUsedTeams] = useState<string[]>([])
+  const [selectedUseCase, setSelectedUseCase] = useState("")
+  const [open, setOpen] = useState(false)
+
+  const handleSelect = (team: string) => {
+    if (usedTeams.includes(team)) return
+
+    const index = TEAM_MAPPING[team]
+    const targetAngle = 360 * 5 + (360 / 6) * index
+
+    setRotation(targetAngle)
+    setUsedTeams([...usedTeams, team])
+    setSelectedUseCase(USE_CASES[index])
+
+    setTimeout(() => {
+      setOpen(true)
+      confetti({
+        particleCount: 180,
+        spread: 80,
+        origin: { y: 0.6 },
+      })
+    }, 2000)
+  }
+
+  return (
+    <div className="h-screen w-screen flex flex-col items-center justify-center bg-gradient-to-br from-black via-zinc-900 to-slate-900 text-white overflow-hidden">
+
+      <h1 className="text-4xl font-bold mb-10">🎯 Hackathon Use Case Wheel</h1>
+
+      <div className="relative w-[380px] h-[380px] mb-10">
+        <div
+          className="absolute inset-0 rounded-full border-[10px] border-white flex items-center justify-center transition-transform duration-[2000ms] ease-out"
+          style={{ transform: `rotate(${rotation}deg)` }}
+        >
+          {USE_CASES.map((usecase, i) => (
+            <div
+              key={i}
+              className="absolute w-full h-full flex items-start justify-center"
+              style={{ transform: `rotate(${(360 / 6) * i}deg)` }}
+            >
+              <div className="mt-4 bg-white text-black px-3 py-1 rounded-full text-sm font-semibold">
+                {usecase}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Pointer */}
+        <div className="absolute top-[-10px] left-1/2 -translate-x-1/2 w-0 h-0 
+          border-l-[14px] border-r-[14px] border-b-[24px] 
+          border-l-transparent border-r-transparent border-b-red-500" />
+      </div>
+
+      <div className="flex gap-6">
+        {["Team 1", "Team 2", "Team 3"].map((team) => (
+          <Button
+            key={team}
+            disabled={usedTeams.includes(team)}
+            onClick={() => handleSelect(team)}
+            className="text-lg px-8 py-6"
+          >
+            {team}
+          </Button>
+        ))}
+      </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="text-center">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">🎉 Selected Use Case</DialogTitle>
+          </DialogHeader>
+          <p className="text-xl font-semibold mt-4">{selectedUseCase}</p>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
