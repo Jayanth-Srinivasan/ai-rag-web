@@ -39,27 +39,27 @@ export default function Page() {
 
     setTimeout(() => {
       setOpen(true)
-      confetti({ particleCount: 250, spread: 90, origin: { y: 0.6 } })
-    }, 2500)
+      confetti({ particleCount: 160, spread: 60, origin: { y: 0.55 } })
+    }, 2200)
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50 to-sky-100 overflow-hidden">
+    <div className="h-screen w-screen flex flex-col items-center justify-center bg-slate-50 text-slate-900 overflow-hidden">
 
-      <h1 className="text-4xl font-extrabold mb-8 text-slate-800">
-        🎯 Select Your Hackathon Use Case
+      <h1 className="text-4xl font-semibold mb-10 flex items-center gap-3">
+        🎯 Select Hackathon Use Case
       </h1>
 
-      <div className="relative w-[560px] h-[560px] mb-16">
+      <div className="relative w-[560px] h-[560px] mb-14">
 
         {/* Pointer */}
         <div className="absolute -top-9 left-1/2 -translate-x-1/2 z-20">
-          <div className="w-0 h-0 border-l-[22px] border-r-[22px] border-b-[42px] border-l-transparent border-r-transparent border-b-slate-900 drop-shadow-lg" />
+          <div className="w-0 h-0 border-l-[20px] border-r-[20px] border-b-[38px] border-l-transparent border-r-transparent border-b-slate-900 drop-shadow" />
         </div>
 
         {/* Wheel */}
         <div
-          className="absolute inset-0 rounded-full shadow-2xl transition-transform duration-[2500ms] ease-out overflow-hidden"
+          className="absolute inset-0 rounded-full shadow-xl transition-transform duration-[2200ms] ease-out overflow-hidden bg-white border border-slate-200"
           style={{ transform: `rotate(${rotation}deg)` }}
         >
           {USE_CASES.map((usecase, i) => {
@@ -70,12 +70,12 @@ export default function Page() {
                 <div
                   className="w-full h-full flex items-start justify-center"
                   style={{
-                    background: `hsl(${i * 60}, 75%, 65%)`,
+                    background: i % 2 === 0 ? "#f1f5f9" : "#e2e8f0",
                     clipPath: "polygon(50% 50%, 0 0, 100% 0)",
                   }}
                 >
                   <span
-                    className="mt-8 w-36 text-center text-sm font-bold text-white drop-shadow"
+                    className="mt-10 w-40 text-center text-sm font-medium text-slate-700"
                     style={{ transform: `rotate(${angle / 2}deg)` }}
                   >
                     {usecase}
@@ -87,21 +87,21 @@ export default function Page() {
 
           {/* Center Hub */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-28 h-28 bg-white rounded-full shadow-xl flex items-center justify-center text-xl font-bold border-4 border-slate-300">
+            <div className="w-24 h-24 bg-white rounded-full shadow border border-slate-300 flex items-center justify-center text-lg font-semibold">
               SPIN
             </div>
           </div>
         </div>
       </div>
 
-      {/* Team Buttons */}
-      <div className="flex gap-8">
+      {/* Controls */}
+      <div className="flex gap-6">
         {["Team 1", "Team 2", "Team 3"].map((team) => (
           <Button
             key={team}
             onClick={() => spin(team)}
             disabled={usedTeams.includes(team)}
-            className="px-12 py-6 text-lg shadow-lg"
+            className="px-10 py-5 text-lg"
             variant={usedTeams.includes(team) ? "secondary" : "default"}
           >
             {team}
@@ -109,15 +109,13 @@ export default function Page() {
         ))}
       </div>
 
-      {/* Result Dialog */}
+      {/* Result */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="text-center">
           <DialogHeader>
-            <DialogTitle className="text-2xl">🎉 Selected Use Case</DialogTitle>
+            <DialogTitle className="text-2xl">Selected Use Case</DialogTitle>
           </DialogHeader>
-          <p className="mt-4 text-xl font-bold text-slate-700">
-            {selectedUseCase}
-          </p>
+          <p className="mt-4 text-xl font-semibold">{selectedUseCase}</p>
         </DialogContent>
       </Dialog>
     </div>
